@@ -2,7 +2,9 @@ import cv2
 from pyzbar.pyzbar import decode
 import pygame
 import time
-import arms  # Import the arms module
+import os
+from datetime import datetime
+import arms_moving
 
 # Initialize pygame mixer
 pygame.mixer.init()
@@ -19,6 +21,19 @@ sounds = {data: pygame.mixer.Sound(sound_file) for data, sound_file in qr_data_t
 
 # Initialize the camera
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+cap.set(cv2.CAP_PROP_FPS, 10)
+
+# Generate filename based on current timestamp
+current_time = datetime.now().strftime('%Y%m%d%H%M')
+video_filename = f'{current_time}.avi'
+
+# Define the codec and create VideoWriter object
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
+out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
+
 
 def play_sound(sound):
     """Play the loaded sound."""
@@ -39,6 +54,9 @@ try:
         if not ret:
             break
 
+        # Write the frame to the video file
+        out.write(frame)
+
         # Convert the frame to grayscale (optional but can improve accuracy)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -49,9 +67,9 @@ try:
             if qr_data in sounds:
                 play_sound(sounds[qr_data])
                 if qr_data == "qr_code_1":
-                    arms.happy_mode()  # Call the happy_mode function
+                    arms_moving.happy_mode()  # Call the happy_mode function
                 elif qr_data == "qr_code_2":
-                    arms.sad_mode()  # Call the sad_mode function
+                    arms_moving.sad_mode()  # Call the sad_mode function
             else:
                 print("No sound associated with this QR code")
 
@@ -66,7 +84,7 @@ except KeyboardInterrupt:
     pass
 finally:
     # Clean up GPIO and stop PWM signals
-    arms.cleanup()
+    arms_moving.cleanup()
 
 # When everything is done, release the capture and close windows
 cap.release()
