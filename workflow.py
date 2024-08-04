@@ -33,7 +33,6 @@ video_filename = f'{current_time}.avi'
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
 out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
 
-
 def play_sound(sound):
     """Play the loaded sound."""
     sound.play()
@@ -49,7 +48,6 @@ def scan_qr_code(frame):
 def qr_code_scanner():
     """Thread function to continuously scan QR codes."""
     while True:
-        # Capture frame-by-frame
         ret, frame = cap.read()
         if not ret:
             break
@@ -70,39 +68,38 @@ def qr_code_scanner():
             else:
                 print("No sound associated with this QR code")
 
-def main():
-    """Main function to handle video recording."""
-    try:
-        while True:
-            # Capture frame-by-frame
-            ret, frame = cap.read()
-            if not ret:
-                break
+def video_recorder():
+    """Thread function to continuously record video."""
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-            # Write the frame to the video file
-            out.write(frame)
+        # Write the frame to the video file
+        out.write(frame)
 
-            # Display the resulting frame
-            cv2.imshow('frame', frame)
+        # Display the resulting frame
+        cv2.imshow('frame', frame)
 
-            # Break the loop if 'q' is pressed
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+        # Break the loop if 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    except KeyboardInterrupt:
-        pass
-    finally:
-        # Clean up GPIO and stop PWM signals
-        arms_moving.cleanup()
+try:
+    # Start QR code scanner thread
+    scanner_thread = threading.Thread(target=qr_code_scanner, daemon=True)
+    scanner_thread.start()
 
-        # When everything is done, release the capture, video writer, and close windows
-        cap.release()
-        out.release()
-        cv2.destroyAllWindows()
+    # Run the video recorder function in the main thread
+    video_recorder()
 
-# Start QR code scanner thread
-scanner_thread = threading.Thread(target=qr_code_scanner, daemon=True)
-scanner_thread.start()
+except KeyboardInterrupt:
+    pass
+finally:
+    # Clean up GPIO and stop PWM signals
+    arms_moving.cleanup()
 
-# Run the main function
-main()
+    # When everything is done, release the capture, video writer, and close windows
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
