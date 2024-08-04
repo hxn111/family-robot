@@ -86,11 +86,10 @@ def video_recorder():
             break
 
 try:
-    # Start QR code scanner thread
-    scanner_thread = threading.Thread(target=qr_code_scanner, daemon=True)
-    scanner_thread.start()
+    # Start the QR code scanning thread
+    threading.Thread(target=qr_code_scanner, daemon=True).start()
 
-    # Run the video recorder function in the main thread
+    # Start the video recording thread
     video_recorder()
 
 except KeyboardInterrupt:
