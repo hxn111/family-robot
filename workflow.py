@@ -2,7 +2,7 @@ import cv2
 from pyzbar.pyzbar import decode
 import pygame
 import time
-import os
+import threading
 from datetime import datetime
 import arms_moving
 
@@ -21,7 +21,6 @@ sounds = {data: pygame.mixer.Sound(sound_file) for data, sound_file in qr_data_t
 
 # Initialize the camera
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUY2'))
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 cap.set(cv2.CAP_PROP_FPS, 10)
@@ -47,15 +46,13 @@ def scan_qr_code(frame):
         return obj.data.decode('utf-8')
     return None
 
-try:
+def qr_code_scanner():
+    """Thread function to continuously scan QR codes."""
     while True:
         # Capture frame-by-frame
         ret, frame = cap.read()
         if not ret:
             break
-
-        # Write the frame to the video file
-        out.write(frame)
 
         # Convert the frame to grayscale (optional but can improve accuracy)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -73,19 +70,39 @@ try:
             else:
                 print("No sound associated with this QR code")
 
-        # Display the resulting frame
-        cv2.imshow('frame', frame)
+def main():
+    """Main function to handle video recording."""
+    try:
+        while True:
+            # Capture frame-by-frame
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        # Break the loop if 'q' is pressed
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            # Write the frame to the video file
+            out.write(frame)
 
-except KeyboardInterrupt:
-    pass
-finally:
-    # Clean up GPIO and stop PWM signals
-    arms_moving.cleanup()
+            # Display the resulting frame
+            cv2.imshow('frame', frame)
 
-# When everything is done, release the capture and close windows
-cap.release()
-cv2.destroyAllWindows()
+            # Break the loop if 'q' is pressed
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # Clean up GPIO and stop PWM signals
+        arms_moving.cleanup()
+
+        # When everything is done, release the capture, video writer, and close windows
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+
+# Start QR code scanner thread
+scanner_thread = threading.Thread(target=qr_code_scanner, daemon=True)
+scanner_thread.start()
+
+# Run the main function
+main()
