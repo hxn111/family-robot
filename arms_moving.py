@@ -15,8 +15,8 @@ pwm1 = GPIO.PWM(servo_pin1, 50)  # 50Hz
 pwm2 = GPIO.PWM(servo_pin2, 50)  # 50Hz
 
 # start pwm
-pwm1.start(90)
-pwm2.start(90)
+pwm1.start(0)
+pwm2.start(0)
 
 def set_angle(pwm, angle):
     duty_cycle = 2.5 + (angle / 18.0)  # convert angle to duty cycle
@@ -52,6 +52,10 @@ def happy_mode():
         set_angle(pwm1, angle)
         set_angle(pwm2, 270-angle)
         time.sleep(0.01)
+
+    # Stop PWM signal
+    pwm1.ChangeDutyCycle(0)
+    pwm2.ChangeDutyCycle(0)
 
 
 def cleanup():
