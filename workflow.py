@@ -27,7 +27,7 @@ cap.set(cv2.CAP_PROP_FPS, 10)
 
 # Generate filename based on current timestamp
 current_time = datetime.now().strftime('%Y%m%d%H%M')
-video_filename = f'{current_time}.avi'
+video_filename = f'./test video/{current_time}.avi'
 
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
