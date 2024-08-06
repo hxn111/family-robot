@@ -5,13 +5,13 @@ workflow.py --the overall workflow
 
 arms_moving.py --control servos to move like arms
 
-qrgenerate.py --generate an audio into a qr code
+qrgenerate.py --transfer an audio into a qr code
 
 ## some tests
-qrscan.py --test qr scan
+qrscan.py --qr scan
 
-OpenCVTrackFace.py --test face recognition
+OpenCVTrackFace.py --face recognition
 
-servoreaddata.py --test to print out the rotation data of servo according to the face recognition
+servoreaddata.py --print out the rotation data of servo according to the face recognition
 
-servotest.py --test to rotate servo according to the face recognition
+servotest.py --rotate servo according to the face recognition
