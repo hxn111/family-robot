@@ -10,16 +10,6 @@ import hat_arms
 # Initialize pygame mixer
 pygame.mixer.init()
 
-# Dictionary mapping QR code data to sound files
-qr_data_to_sound = {
-    "qr_code_1": "sound/test.wav",
-    # "qr_code_2": "sound/sound2.wav",
-    # "qr_code_3": "sound/sound3.wav"
-}
-
-# Preload sounds
-sounds = {data: pygame.mixer.Sound(sound_file) for data, sound_file in qr_data_to_sound.items()}
-
 # Initialize the camera
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -34,10 +24,9 @@ video_filename = f'./test video/{current_time}.avi'
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
 out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
 
-def play_sound(sound):
+def play_sound(sound_file):
     """Play the loaded sound."""
-    sound.play()
-    time.sleep(sound.get_length())  # Wait for the sound to finish
+    os.system(f"sudo aplay{sound_file}")
 
 def scan_qr_code(frame):
     """Scan the frame for QR codes and return the data."""
@@ -62,15 +51,15 @@ def qr_code_scanner():
             qr_data = scan_qr_code(frame)
             if qr_data:
                 print(f"QR Code detected: {qr_data}")
-                if qr_data in sounds:
-                    play_sound(sounds[qr_data])
-                    if qr_data == "qr_code_1":
-                        print("Happy mode triggered")  # Placeholder for arms_moving.happy_mode()
-                        hat_arms.happy_mode99
-                    elif qr_data == "qr_code_2":
-                        print("Sad mode triggered")  # Placeholder for arms_moving.sad_mode()
-                else:
-                    print("No sound associated with this QR code")
+                
+                if qr_data == "qr_code_1":
+                    print("Happy mode triggered")
+                    threading.Thread(target=play_sound,args=(" /home/Tina/Downloads/family-robot/sound/testnew.wav",)).start()
+                    hat_arms.happy_mode()
+                elif qr_data == "qr_code_2":
+                    print("Sad mode triggered")
+            else:
+                print("No QR code")
 
 
 
