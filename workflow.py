@@ -4,6 +4,7 @@ import pygame
 import time
 import threading
 from datetime import datetime
+import os
 import hat_arms
 
 # Initialize pygame mixer
@@ -52,21 +53,26 @@ def qr_code_scanner():
         if not ret:
             break
 
-        # Convert the frame to grayscale (optional but can improve accuracy)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # Take a screenshot every 2 seconds
+        if int(time.time()) % 2 == 0:
+            screenshot_filename = f'./test pic/{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg'
+            cv2.imwrite(screenshot_filename, frame)
 
-        # Scan for QR codes
-        qr_data = scan_qr_code(gray)
-        if qr_data:
-            print(f"QR Code detected: {qr_data}")
-            if qr_data in sounds:
-                play_sound(sounds[qr_data])
-                if qr_data == "qr_code_1":
-                    hat_arms.happy_mode()  # Call the happy_mode function
-                elif qr_data == "qr_code_2":
-                    hat_arms.sad_mode()  # Call the sad_mode function
-            else:
-                print("No sound associated with this QR code")
+            # Scan the screenshot for QR codes
+            qr_data = scan_qr_code(frame)
+            if qr_data:
+                print(f"QR Code detected: {qr_data}")
+                if qr_data in sounds:
+                    play_sound(sounds[qr_data])
+                    if qr_data == "qr_code_1":
+                        print("Happy mode triggered")  # Placeholder for arms_moving.happy_mode()
+                        time.sleep(5)
+                    elif qr_data == "qr_code_2":
+                        print("Sad mode triggered")  # Placeholder for arms_moving.sad_mode()
+                else:
+                    print("No sound associated with this QR code")
+
+
 
 def video_recorder():
     """Thread function to continuously record video."""
