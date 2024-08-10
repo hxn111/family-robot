@@ -4,7 +4,7 @@ import pygame
 import time
 import threading
 from datetime import datetime
-import arms_moving
+import hat_arms
 
 # Initialize pygame mixer
 pygame.mixer.init()
@@ -62,9 +62,9 @@ def qr_code_scanner():
             if qr_data in sounds:
                 play_sound(sounds[qr_data])
                 if qr_data == "qr_code_1":
-                    arms_moving.happy_mode()  # Call the happy_mode function
+                    hat_arms.happy_mode()  # Call the happy_mode function
                 elif qr_data == "qr_code_2":
-                    arms_moving.sad_mode()  # Call the sad_mode function
+                    hat_arms.sad_mode()  # Call the sad_mode function
             else:
                 print("No sound associated with this QR code")
 
@@ -96,7 +96,7 @@ except KeyboardInterrupt:
     pass
 finally:
     # Clean up GPIO and stop PWM signals
-    arms_moving.cleanup()
+    hat_arms.cleanup()
 
     # When everything is done, release the capture, video writer, and close windows
     cap.release()
