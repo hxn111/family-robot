@@ -66,7 +66,7 @@ def qr_code_scanner():
                     play_sound(sounds[qr_data])
                     if qr_data == "qr_code_1":
                         print("Happy mode triggered")  # Placeholder for arms_moving.happy_mode()
-                        time.sleep(5)
+                        hat_arms.happy_mode99
                     elif qr_data == "qr_code_2":
                         print("Sad mode triggered")  # Placeholder for arms_moving.sad_mode()
                 else:
@@ -102,7 +102,7 @@ except KeyboardInterrupt:
     pass
 finally:
     # Clean up GPIO and stop PWM signals
-    hat_arms.cleanup()
+    # hat_arms.cleanup()
 
     # When everything is done, release the capture, video writer, and close windows
     cap.release()
