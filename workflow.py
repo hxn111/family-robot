@@ -26,7 +26,7 @@ out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
 
 def play_sound(sound_file):
     """Play the loaded sound."""
-    os.system(f"sudo aplay{sound_file}")
+    os.system(f"sudo aplay /home/Tina/Downloads/family-robot/sound/{sound_file}")
 
 def scan_qr_code(frame):
     """Scan the frame for QR codes and return the data."""
@@ -54,7 +54,7 @@ def qr_code_scanner():
                 
                 if qr_data == "qr_code_1":
                     print("Happy mode triggered")
-                    threading.Thread(target=play_sound,args=(" /home/Tina/Downloads/family-robot/sound/testnew.wav",)).start()
+                    threading.Thread(target=play_sound,args=("teeth.wav",)).start()
                     hat_arms.happy_mode()
                 elif qr_data == "qr_code_2":
                     print("Sad mode triggered")
