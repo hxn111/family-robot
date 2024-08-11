@@ -53,9 +53,9 @@ def qr_code_scanner():
                 print(f"QR Code detected: {qr_data}")
                 
                 if qr_data == "qr_code_1":
-                    print("Happy mode triggered")
+                    print("teeth routine triggered")
                     threading.Thread(target=play_sound,args=("teeth.wav",)).start()
-                    hat_arms.happy_mode()
+                    hat_arms.teeth()
                 elif qr_data == "qr_code_2":
                     print("Sad mode triggered")
             else:

@@ -38,7 +38,47 @@ def happy_mode():
         servo2.angle(-i)
         time.sleep(0.01)
 
-    # stop pwm signal
+def ready():
+    # hi, are you ready?
+    for i in range(0,90,1):
+        servo1.angle(i)
+        servo2.angle(-i)
+        time.sleep(0.01)
+    time.sleep(1)
+    for i in range(90,0,-1):
+        servo1.angle(i)
+        servo2.angle(-i)
+        time.sleep(0.01)
+
+    for i in range(0,90,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    time.sleep(2)
+    for i in range(90,0,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
+
+    
+
+def teeth():
+    ready()
+
+    for i in range(0,45,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for j in range(0,5):
+        for i in range(45,-45,-1):
+            servo1.angle(i)
+            time.sleep(0.01)
+        for i in range(-45,45,1):
+            servo1.angle(i)
+            time.sleep(0.01)
+    for i in range(45,0,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
+
+    happy_mode()
+
 
 def cleanup():
     servo1.stop()
