@@ -11,21 +11,6 @@ import subprocess
 # Initialize pygame mixer
 pygame.mixer.init()
 
-# Initialize the camera
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-cap.set(cv2.CAP_PROP_FPS, 10)
-
-# Generate filename based on current timestamp
-current_time = datetime.now().strftime('%Y%m%d%H%M')
-video_filename = f'/home/Tina/Downloads/family-robot/test video/{current_time}.avi'
-audio_filename = f'/home/Tina/Downloads/family-robot/test audio/{current_time}.wav'
-
-# Define the codec and create VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
-out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
-
 def play_sound(sound_file):
     """Play the loaded sound."""
     os.system(f"sudo aplay /home/Tina/Downloads/family-robot/sound/{sound_file}")
@@ -63,22 +48,45 @@ def qr_code_scanner():
             else:
                 print("No QR code")
 
+# Initialize the camera
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+cap.set(cv2.CAP_PROP_FPS, 10)
+
+# Generate filename based on current timestamp
+current_time = datetime.now().strftime('%Y%m%d%H%M')
+video_filename = f'/home/Tina/Downloads/family-robot/test video/{current_time}.avi'
+audio_filename = f'/home/Tina/Downloads/family-robot/test audio/{current_time}.wav'
+
+# Define the codec and create VideoWriter object
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
+out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
+
 def video_recorder():
     """Thread function to continuously record video."""
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        # Write the frame to the video file
-        out.write(frame)
+            # Write the frame to the video file
+            out.write(frame)
+            out.flush()  # immedeiate save
 
-        # Display the resulting frame
-        cv2.imshow('frame', frame)
+            # Display the resulting frame
+            cv2.imshow('frame', frame)
+    
+    except Exception as e:
+        print(f"Error occurred: {e}")
+    
+    finally:
+        # Release the video capture and writer
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
 
-        # Break the loop if 'q' is pressed
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
 
 def audio_recorder():
     """Start continuous audio recording."""
