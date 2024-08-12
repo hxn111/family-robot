@@ -19,8 +19,8 @@ cap.set(cv2.CAP_PROP_FPS, 10)
 
 # Generate filename based on current timestamp
 current_time = datetime.now().strftime('%Y%m%d%H%M')
-video_filename = f'./test video/{current_time}.avi'
-audio_filename = f'./test audio/{current_time}.wav'
+video_filename = f'/home/Tina/Downloads/family-robot/test video/{current_time}.avi'
+audio_filename = f'/home/Tina/Downloads/family-robot/test audio/{current_time}.wav'
 
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
@@ -46,7 +46,7 @@ def qr_code_scanner():
 
         # Take a screenshot every 2 seconds
         if int(time.time()) % 2 == 0:
-            screenshot_filename = f'./test pic/{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg'
+            screenshot_filename = f'/home/Tina/Downloads/family-robot/test pic/{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg'
             cv2.imwrite(screenshot_filename, frame)
 
             # Scan the screenshot for QR codes
@@ -96,7 +96,7 @@ def audio_recorder():
 
 try:
     # Start the QR code scanning thread
-    # threading.Thread(target=video_recorder, daemon=True).start()
+    threading.Thread(target=video_recorder, daemon=True).start()
 
     # Start the video recording thread
     threading.Thread(target=audio_recorder, daemon=True).start()
