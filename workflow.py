@@ -65,6 +65,7 @@ out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
 
 def video_recorder():
     """Thread function to continuously record video."""
+    global out
     try:
         while True:
             ret, frame = cap.read()
@@ -73,7 +74,7 @@ def video_recorder():
 
             # Write the frame to the video file
             out.write(frame)
-            out.flush()  # immedeiate save
+            # out.flush()  # immedeiate save
 
             # Display the resulting frame
             cv2.imshow('frame', frame)
@@ -103,13 +104,13 @@ def audio_recorder():
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 try:
-    # Start the QR code scanning thread
+    # Start the video recording thread
     threading.Thread(target=video_recorder, daemon=True).start()
 
-    # Start the video recording thread
+    # Start the continuous audio recording
     threading.Thread(target=audio_recorder, daemon=True).start()
 
-    # Start the continuous audio recording
+    # Start the QR code scanning thread
     qr_code_scanner()
 
 except KeyboardInterrupt:
@@ -121,8 +122,12 @@ finally:
     # Terminate the audio recording process
     if 'audio_process' in globals():
         audio_process.terminate()
+    # Ensure that video recording is finalized properly
+    if 'out' in globals():
+        out.release()
+    # Release the video capture and close any OpenCV windows
+    if 'cap' in globals():
+        cap.release()
 
-    # When everything is done, release the capture, video writer, and close windows
-    cap.release()
-    out.release()
+    # When everything is done, close windows
     cv2.destroyAllWindows()
