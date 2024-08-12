@@ -6,6 +6,8 @@ import threading
 from datetime import datetime
 import os
 import hat_arms
+import wave
+import pyaudio
 
 # Initialize pygame mixer
 pygame.mixer.init()
@@ -23,6 +25,28 @@ video_filename = f'./test video/{current_time}.avi'
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
 out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
+
+# audio recording setting
+audio_filename = f"./test audio/{current_time}.wav"
+CHUNK = 1024
+
+def record_audio():
+    audio = pyaudio.PyAudio()
+
+    stream = audio.open(format=pyaudio.paInt16,
+                        channels=1,
+                        rate=44100,
+                        input=True,
+                        frames_per_buffer=CHUNK,
+                        input_device_index=2)
+    print("recording...")
+
+    frmaes = []
+    while True:
+        data = stream.read(CHUNK)
+        frmaes.append(data)
+
+   
 
 def play_sound(sound_file):
     """Play the loaded sound."""
