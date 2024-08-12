@@ -26,27 +26,14 @@ video_filename = f'./test video/{current_time}.avi'
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
 out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
 
-# audio recording setting
-audio_filename = f"./test audio/{current_time}.wav"
+# Audio recording parameters
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
 CHUNK = 1024
+DEVICE_INDEX = 2  # Device ID for the external microphone
+audio_filename = f'./test audio/{current_time}.wav'
 
-def record_audio():
-    audio = pyaudio.PyAudio()
-
-    stream = audio.open(format=pyaudio.paInt16,
-                        channels=1,
-                        rate=44100,
-                        input=True,
-                        frames_per_buffer=CHUNK,
-                        input_device_index=2)
-    print("recording...")
-
-    frmaes = []
-    while True:
-        data = stream.read(CHUNK)
-        frmaes.append(data)
-
-   
 
 def play_sound(sound_file):
     """Play the loaded sound."""
@@ -104,9 +91,48 @@ def video_recorder():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+def record_audio():
+    audio = pyaudio.PyAudio()
+
+    stream = audio.open(format=FORMAT,
+                        channels=CHANNELS,
+                        rate=RATE,
+                        input=True,
+                        frames_per_buffer=CHUNK,
+                        input_device_index=DEVICE_INDEX)
+    print("recording...")
+
+    frames = []
+    
+    try:
+        while True:
+            data = stream.read(CHUNK)
+            frames.append(data)
+    except KeyboardInterrupt:
+        print("Stopping audio recording...")
+
+    finally:
+        # Stop and close the stream
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
+
+    # Save the recorded data as a WAV file
+    waveFile = wave.open(audio_filename, 'wb')
+    waveFile.setnchannels(CHANNELS)
+    waveFile.setsampwidth(audio.get_sample_size(FORMAT))
+    waveFile.setframerate(RATE)
+    waveFile.writeframes(b''.join(frames))
+    waveFile.close()
+
+    print(f"Saved recording to {audio_filename}")
+
 try:
     # Start the QR code scanning thread
     threading.Thread(target=qr_code_scanner, daemon=True).start()
+
+    # Start the audio recording thread
+    threading.Thread(target=record_audio, daemon=True).start()
 
     # Start the video recording thread
     video_recorder()
