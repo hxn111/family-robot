@@ -1,0 +1,16 @@
+sudo systemctl status rc-local.service
+× rc-local.service - /etc/rc.local Compatibility
+     Loaded: loaded (/etc/systemd/system/rc-local.service; enabled; preset: ena>
+    Drop-In: /usr/lib/systemd/system/rc-local.service.d
+             └─debian.conf
+     Active: failed (Result: exit-code) since Tue 2024-08-13 05:03:50 CST; 30s >
+    Process: 2877 ExecStart=/etc/rc.local start (code=exited, status=203/EXEC)
+        CPU: 1ms
+
+Aug 13 05:03:50 raspberrypi (rc.local)[2877]: rc-local.service: Failed to execu>
+Aug 13 05:03:50 raspberrypi (rc.local)[2877]: rc-local.service: Failed at step >
+Aug 13 05:03:50 raspberrypi systemd[1]: Starting rc-local.service - /etc/rc.loc>
+Aug 13 05:03:50 raspberrypi systemd[1]: rc-local.service: Control process exite>
+Aug 13 05:03:50 raspberrypi systemd[1]: rc-local.service: Failed with result 'e>
+Aug 13 05:03:50 raspberrypi systemd[1]: Failed to start rc-local.service - /etc>
+lines 1-14/14 (END)
