@@ -6,8 +6,7 @@ import threading
 from datetime import datetime
 import os
 import hat_arms
-import wave
-import pyaudio
+import subprocess
 
 # Initialize pygame mixer
 pygame.mixer.init()
@@ -21,19 +20,11 @@ cap.set(cv2.CAP_PROP_FPS, 10)
 # Generate filename based on current timestamp
 current_time = datetime.now().strftime('%Y%m%d%H%M')
 video_filename = f'./test video/{current_time}.avi'
+audio_filename = f'./test audio/{current_time}.wav'
 
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
 out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
-
-# Audio recording parameters
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 44100
-CHUNK = 1024
-DEVICE_INDEX = 2  # Device ID for the external microphone
-audio_filename = f'./test audio/{current_time}.wav'
-
 
 def play_sound(sound_file):
     """Play the loaded sound."""
@@ -64,15 +55,13 @@ def qr_code_scanner():
                 print(f"QR Code detected: {qr_data}")
                 
                 if qr_data == "qr_code_1":
-                    print("teeth routine triggered")
-                    threading.Thread(target=play_sound,args=("teeth.wav",)).start()
-                    hat_arms.teeth()
+                    print("Happy mode triggered")
+                    threading.Thread(target=play_sound, args=("teeth.wav",)).start()
+                    hat_arms.happy_mode()
                 elif qr_data == "qr_code_2":
                     print("Sad mode triggered")
             else:
                 print("No QR code")
-
-
 
 def video_recorder():
     """Thread function to continuously record video."""
@@ -91,57 +80,39 @@ def video_recorder():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-def record_audio():
-    audio = pyaudio.PyAudio()
-
-    stream = audio.open(format=FORMAT,
-                        channels=CHANNELS,
-                        rate=RATE,
-                        input=True,
-                        frames_per_buffer=CHUNK,
-                        input_device_index=DEVICE_INDEX)
-    print("recording...")
-
-    frames = []
-    
-    try:
-        while True:
-            data = stream.read(CHUNK)
-            frames.append(data)
-    except KeyboardInterrupt:
-        print("Stopping audio recording...")
-
-    finally:
-        # Stop and close the stream
-        stream.stop_stream()
-        stream.close()
-        audio.terminate()
-
-    # Save the recorded data as a WAV file
-    waveFile = wave.open(audio_filename, 'wb')
-    waveFile.setnchannels(CHANNELS)
-    waveFile.setsampwidth(audio.get_sample_size(FORMAT))
-    waveFile.setframerate(RATE)
-    waveFile.writeframes(b''.join(frames))
-    waveFile.close()
-
-    print(f"Saved recording to {audio_filename}")
+def audio_recorder():
+    """Start continuous audio recording."""
+    global audio_process
+    audio_process = subprocess.Popen([
+        'arecord',
+        '-D', 'plughw:2,0',  # Specify the device
+        '-f', 'cd',  # CD quality
+        '-r', '44100',  # Sample rate
+        '-c', '1',  # Mono audio
+        '-t', 'wav',  # Output file type
+        '-q',  # Quiet mode
+        audio_filename  # Output file name
+    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 try:
     # Start the QR code scanning thread
-    threading.Thread(target=qr_code_scanner, daemon=True).start()
-
-    # Start the audio recording thread
-    threading.Thread(target=record_audio, daemon=True).start()
+    # threading.Thread(target=video_recorder, daemon=True).start()
 
     # Start the video recording thread
-    video_recorder()
+    threading.Thread(target=audio_recorder, daemon=True).start()
+
+    # Start the continuous audio recording
+    qr_code_scanner()
 
 except KeyboardInterrupt:
     pass
 finally:
     # Clean up GPIO and stop PWM signals
     # hat_arms.cleanup()
+
+    # Terminate the audio recording process
+    if 'audio_process' in globals():
+        audio_process.terminate()
 
     # When everything is done, release the capture, video writer, and close windows
     cap.release()
