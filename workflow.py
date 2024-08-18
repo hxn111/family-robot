@@ -47,7 +47,6 @@ def check_all_scanned():
 
 def qr_code_scanner():
     """Thread function to continuously scan QR codes."""
-    global is_playing_audio
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -58,11 +57,9 @@ def qr_code_scanner():
             screenshot_filename = f'/home/Tina/Downloads/family-robot/test pic/{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg'
             cv2.imwrite(screenshot_filename, frame)
 
-            # Only scan QR codes if no audio is playing
-            if not is_playing_audio:
-                routine_flow(frame)
-            else:
-                pass
+            # scan QR codes
+            routine_flow(frame)
+            
 
 def routine_flow(frame):
     """ reminder and diary routine """
@@ -97,12 +94,18 @@ def routine_flow(frame):
                 if not scanned_qrcodes["qrcode_1"]:
                     print("QR Code 1 missing at ",current_time)
                     threading.Thread(target=play_sound, args=("reminder1.WAV",)).start()
+                    time.sleep(6)
+                    return
                 if not scanned_qrcodes["qrcode_2"]:
                     print("QR Code 2 missing at ",current_time)
                     threading.Thread(target=play_sound, args=("reminder2.WAV",)).start()
+                    time.sleep(6)
+                    return
                 if not scanned_qrcodes["qrcode_3"]:
                     print("QR Code 3 missing at ",current_time)
                     threading.Thread(target=play_sound, args=("reminder3.WAV",)).start()
+                    time.sleep(6)
+                    return
         elif qr_data == "qrcode_5":
             if qrcode_5_count > 0 & qrcode_5_count <= 6:
                 print("Diary ",qrcode_5_count," is recording at ",current_time)
@@ -115,6 +118,12 @@ def routine_flow(frame):
             elif qrcode_5_count > 6:
                 print("All final sounds have been played at ",current_time)
                 threading.Thread(target=play_sound, args=("ending.WAV",)).start()
+        
+        sys.stdout.flush()
+        time.sleep(8)
+
+    else:
+        pass
 
 
 # Initialize the camera
@@ -172,6 +181,11 @@ def audio_recorder():
         audio_filename  # Output file name
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+     # Check for errors
+    stderr = audio_process.communicate()[1]
+    if stderr:
+        print(f"Audio recording error: {stderr.decode()}")
+
 try:
     # Start the video recording thread
     threading.Thread(target=video_recorder, daemon=True).start()
@@ -181,6 +195,7 @@ try:
 
     # Start the QR code scanning thread
     qr_code_scanner()
+
 
 except KeyboardInterrupt:
     pass
@@ -194,7 +209,6 @@ finally:
     # Release the video capture and close any OpenCV windows
     if 'cap' in globals():
         cap.release()
-    
     # Restore the original stdout
     sys.stdout = original_stdout
     # Close the log file
