@@ -2,9 +2,11 @@ import qrcode
 
 # Dictionary mapping QR code data to sound files
 qr_data_to_sound = {
-    "qr_code_1": "./test.wav",
-    # "qr_code_2": "sound2.wav",
-    # "qr_code_3": "sound3.wav"
+    "qrcode_1": "./finished1.wav",
+    "qrcode_2": "./finished2.wav",
+    "qrcode_3": "./finished3.wav",
+    "qrcode_4": "./diary1.wav",
+    "qrcode_5": "./diary2.wav",
 }
 
 # Generate and save QR codes
