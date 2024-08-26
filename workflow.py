@@ -8,6 +8,20 @@ import os
 import hat_arms
 import subprocess
 import sys
+from rpi_ws281x import PixelStrip, Color
+
+LED_COUNT = 16        # number of leds
+LED_PIN = 18          # GPIO18
+LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA = 10          # DMA channel to use for generating signal (try 10)
+LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
+LED_INVERT = False    # True to invert the signal (when using NPN transistor level shift)
+LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+
+# Create NeoPixel object with appropriate configuration.
+strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+# Intialize the library (must be called once before other functions).
+strip.begin()
 
 # Global variable to store the original stdout and the log file object
 global original_stdout, log_file
@@ -61,6 +75,28 @@ def qr_code_scanner():
             routine_flow(frame)
             
 
+def lightup(strip,led_index, color):
+    strip.setPixelColor(led_index,color)
+    strip.show()
+
+def wheel(pos):
+    """生成横跨0-255个位置的彩虹颜色."""
+    if pos < 85:
+        return Color(pos * 3, 255 - pos * 3, 0)
+    elif pos < 170:
+        pos -= 85
+        return Color(255 - pos * 3, 0, pos * 3)
+    else:
+        pos -= 170
+        return Color(0, pos * 3, 255 - pos * 3)
+
+def rainbow(strip, wait_ms=20, iterations=1):
+    for j in range(256 * iterations):
+        for i in range(strip.numPixels()):
+            strip.setPixelColor(i, wheel((i + j) & 255))
+        strip.show()
+        time.sleep(wait_ms / 1000.0)
+
 def routine_flow(frame):
     """ reminder and diary routine """
     qr_data = scan_qr_code(frame)
@@ -71,18 +107,24 @@ def routine_flow(frame):
             print("teeth brushing triggered at ",current_time)
             threading.Thread(target=play_sound, args=("finished1.WAV",)).start()
             # hat_arms.finish_mode()
+            lightup(strip, 1, Color(255,0,0))
+            strip.show()
             scanned_qrcodes["qrcode_1"] = True
         
         elif qr_data == "qrcode_2":
             print("pajamas triggered at ",current_time)
             threading.Thread(target=play_sound, args=("finished2.WAV",)).start()
             # hat_arms.finish_mode()
+            lightup(strip, 2, Color(255,0,0))
+            strip.show()
             scanned_qrcodes["qrcode_2"] = True
         
         elif qr_data == "qrcode_3":
             print("story triggered at ",current_time)
             threading.Thread(target=play_sound, args=("finished3.WAV",)).start()
             # hat_arms.finish_mode()
+            lightup(strip, 3, Color(255,0,0))
+            strip.show()
             scanned_qrcodes["qrcode_3"] = True
         
         elif qr_data == "qrcode_4":
