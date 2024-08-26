@@ -11,10 +11,10 @@ import sys
 from rpi_ws281x import PixelStrip, Color
 
 LED_COUNT = 16        # number of leds
-LED_PIN = 18          # GPIO18
+LED_PIN = 10          # GPIO18,spi 10
 LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA = 10          # DMA channel to use for generating signal (try 10)
-LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
+LED_BRIGHTNESS = 30  # Set to 0 for darkest and 255 for brightest
 LED_INVERT = False    # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
@@ -74,13 +74,19 @@ def qr_code_scanner():
             # scan QR codes
             routine_flow(frame)
             
+def colorWipe(strip, color, wait_ms=50):
+    """Wipe color across display a pixel at a time."""
+    for i in range(strip.numPixels()):
+        strip.setPixelColor(i, color)
+        strip.show()
+        time.sleep(wait_ms / 1000.0)
 
 def lightup(strip,led_index, color):
     strip.setPixelColor(led_index,color)
     strip.show()
 
 def wheel(pos):
-    """生成横跨0-255个位置的彩虹颜色."""
+    """Generate rainbow colors across 0-255 positions."""
     if pos < 85:
         return Color(pos * 3, 255 - pos * 3, 0)
     elif pos < 170:
@@ -91,6 +97,7 @@ def wheel(pos):
         return Color(0, pos * 3, 255 - pos * 3)
 
 def rainbow(strip, wait_ms=20, iterations=1):
+    """Draw rainbow that fades across all pixels at once."""
     for j in range(256 * iterations):
         for i in range(strip.numPixels()):
             strip.setPixelColor(i, wheel((i + j) & 255))
@@ -259,3 +266,4 @@ finally:
 
     # When everything is done, close windows
     cv2.destroyAllWindows()
+    colorWipe(strip, Color(0, 0, 0), 10)
