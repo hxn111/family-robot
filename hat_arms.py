@@ -58,8 +58,6 @@ def ready():
         servo1.angle(i)
         time.sleep(0.01)
 
-    
-
 def teeth():
     ready()
 
@@ -79,13 +77,54 @@ def teeth():
 
     happy_mode()
 
-
 def cleanup():
     servo1.stop()
     servo2.stop()
 
+def listen():
+    for i in range(0,15,1):
+        servo1.angle(i)
+        time.sleep(0.03)
+    time.sleep(1)
+    for i in range(15,-15,-1):
+        servo1.angle(i)
+        time.sleep(0.03)
+    time.sleep(1)
+    for i in range(-15,0,1):
+        servo1.angle(i)
+        time.sleep(0.03)
+
+def finish():
+    for i in range(0,12,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(15,-15,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(-15,15,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(15,0,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
+
+def wrong():
+    for i in range(0,45,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(45,-45,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(-45,45,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(45,0,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
 if __name__ == "__main__":
     try:
-        happy_mode()
+        listen()
+        time.sleep(2)
+        finish()
     except KeyboardInterrupt:
         cleanup()

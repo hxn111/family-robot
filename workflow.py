@@ -42,7 +42,7 @@ scanned_qrcodes = {
     "qrcode_3": False # story
 }
 qrcode_5_count = 0
-diary_questions = ["diary1.wav","diary2.wav","diary3.wav","diary4.wav","diary5.wav","diary6.wav"]
+diary_questions = ["diary1.WAV","diary2.WAV","diary3.WAV","diary4.WAV","diary5.WAV","diary6.WAV"]
 
 def play_sound(sound_file):
     """Play the loaded sound."""
@@ -107,30 +107,31 @@ def rainbow(strip, wait_ms=20, iterations=1):
 def routine_flow(frame):
     """ reminder and diary routine """
     qr_data = scan_qr_code(frame)
+    global qrcode_5_count
     if qr_data:
         print(f"QR Code detected: {qr_data}")
         
         if qr_data == "qrcode_1":
             print("teeth brushing triggered at ",current_time)
             threading.Thread(target=play_sound, args=("finished1.WAV",)).start()
-            # hat_arms.finish_mode()
-            lightup(strip, 1, Color(255,255,0))
+            hat_arms.finish()
+            lightup(strip, 1, Color(0,255,0))
             strip.show()
             scanned_qrcodes["qrcode_1"] = True
         
         elif qr_data == "qrcode_2":
             print("pajamas triggered at ",current_time)
             threading.Thread(target=play_sound, args=("finished2.WAV",)).start()
-            # hat_arms.finish_mode(
-            lightup(strip, 2, Color(255,255,0))
+            hat_arms.finish()
+            lightup(strip, 2, Color(0,255,0))
             strip.show()
             scanned_qrcodes["qrcode_2"] = True
         
         elif qr_data == "qrcode_3":
             print("story triggered at ",current_time)
             threading.Thread(target=play_sound, args=("finished3.WAV",)).start()
-            # hat_arms.finish_mode()
-            lightup(strip, 3, Color(255,255,0))
+            hat_arms.finish()
+            lightup(strip, 3, Color(0,255,0))
             strip.show()
             scanned_qrcodes["qrcode_3"] = True
         
@@ -138,43 +139,49 @@ def routine_flow(frame):
             if check_all_scanned():
                 print("Playing diary at ",current_time)
                 threading.Thread(target=play_sound, args=("diary1.WAV",)).start()
-                qrcode_5_count = 1 
+                hat_arms.listen()
+                qrcode_5_count = 1
+                
             else:
                 if not scanned_qrcodes["qrcode_1"]:
                     print("QR Code 1 missing at ",current_time)
                     threading.Thread(target=play_sound, args=("reminder1.WAV",)).start()
+                    hat_arms.wrong()
                     lightup(strip, 1, Color(255,0,0))
                     time.sleep(6)
                     return
                 if not scanned_qrcodes["qrcode_2"]:
                     print("QR Code 2 missing at ",current_time)
                     threading.Thread(target=play_sound, args=("reminder2.WAV",)).start()
+                    hat_arms.wrong()
                     lightup(strip, 2, Color(255,0,0))
                     time.sleep(6)
                     return
                 if not scanned_qrcodes["qrcode_3"]:
                     print("QR Code 3 missing at ",current_time)
                     threading.Thread(target=play_sound, args=("reminder3.WAV",)).start()
+                    hat_arms.wrong()
                     lightup(strip, 3, Color(255,0,0))
                     time.sleep(6)
                     return
         elif qr_data == "qrcode_5":
             if qrcode_5_count > 0 & qrcode_5_count <= 6:
                 print("Diary ",qrcode_5_count," is recording at ",current_time)
-                sound_to_play = diary_questions[qrcode_5_count-1]
+                sound_to_play = diary_questions[qrcode_5_count]
                 threading.Thread(target=play_sound, args=(sound_to_play,)).start()
-                lightup(strip, qrcode_5_count+3, Color(255,255,0))
+                hat_arms.listen()
+                lightup(strip, qrcode_5_count+3, Color(0,255,0))
                 qrcode_5_count += 1
                 if qrcode_5_count == 6:
                     colorWipe(strip,Color(255,255,0),20)
-                
+
             elif qrcode_5_count == 0:
                 print("Haven't finished routines at ",current_time)
-                threading.Thread(target=play_sound, args=("instructions.WAV",)).start()
+                # threading.Thread(target=play_sound, args=("instructions.WAV",)).start()
             elif qrcode_5_count > 6:
                 print("All final sounds have been played at ",current_time)
                 threading.Thread(target=play_sound, args=("ending.WAV",)).start()
-        
+        print(qrcode_5_count)
         sys.stdout.flush()
         time.sleep(8)
 
@@ -251,6 +258,7 @@ try:
 
     # Start the QR code scanning thread
     qr_code_scanner()
+
 
 
 except KeyboardInterrupt:
