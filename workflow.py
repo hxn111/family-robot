@@ -27,9 +27,25 @@ audio_filename = f'/home/Tina/Downloads/family-robot/test audio/{current_time}.w
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
 out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
 
+def qr_code_scanner():
+    """Thread function to continuously scan QR codes."""
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Take a screenshot every 2 seconds
+        if int(time.time()) % 2 == 0:
+            screenshot_filename = f'/home/Tina/Downloads/family-robot/test pic/{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg'
+            cv2.imwrite(screenshot_filename, frame)
+
+            # scan QR codes
+            routine_flow(frame)
+
 def routine_flow(frame):
     """ reminder and diary routine """
     qr_data = hardware.scan_qr_code(frame)
+    global qrcode_5_count
     if qr_data:
         print(f"QR Code detected: {qr_data}")
         
@@ -61,23 +77,27 @@ def routine_flow(frame):
             if hardware.check_all_scanned():
                 print("Playing diary at ",current_time)
                 threading.Thread(target=hardware.play_sound, args=("diary1.WAV",)).start()
+                hardware.listen()
                 qrcode_5_count = 1 
             else:
                 if not hardware.scanned_qrcodes["qrcode_1"]:
                     print("QR Code 1 missing at ",current_time)
                     threading.Thread(target=hardware.play_sound, args=("reminder1.WAV",)).start()
+                    hardware.wrong()
                     hardware.lightup(hardware.strip, 1, Color(255,0,0))
                     time.sleep(6)
                     return
                 if not hardware.scanned_qrcodes["qrcode_2"]:
                     print("QR Code 2 missing at ",current_time)
                     threading.Thread(target=hardware.play_sound, args=("reminder2.WAV",)).start()
+                    hardware.wrong()
                     hardware.lightup(hardware.strip, 2, Color(255,0,0))
                     time.sleep(6)
                     return
                 if not hardware.scanned_qrcodes["qrcode_3"]:
                     print("QR Code 3 missing at ",current_time)
                     threading.Thread(target=hardware.play_sound, args=("reminder3.WAV",)).start()
+                    hardware.wrong()
                     hardware.lightup(hardware.strip, 3, Color(255,0,0))
                     time.sleep(6)
                     return
@@ -87,6 +107,7 @@ def routine_flow(frame):
                 print("Diary ",qrcode_5_count," is recording at ",current_time)
                 sound_to_play = hardware.diary_questions[qrcode_5_count-1]
                 threading.Thread(target=hardware.play_sound, args=(sound_to_play,)).start()
+                hardware.listen()
                 hardware.lightup(hardware.strip, qrcode_5_count+3, Color(255,255,0))
                 qrcode_5_count += 1
                 if qrcode_5_count == 6:
@@ -98,7 +119,7 @@ def routine_flow(frame):
             elif qrcode_5_count > 6:
                 print("All final sounds have been played at ",current_time)
                 threading.Thread(target=hardware.play_sound, args=("ending.WAV",)).start()
-        
+        # print(qrcode_5_count)
         sys.stdout.flush()
         time.sleep(8)
 

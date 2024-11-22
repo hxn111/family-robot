@@ -28,16 +28,45 @@ servo1 = Servo("P0")
 servo1.angle(0)
 
 def finish_arms():
+    for i in range(0,12,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(15,-15,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(-15,15,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(15,0,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
+
+def listen():
     for i in range(0,15,1):
-            servo1.angle(i)
-            time.sleep(0.01)
+        servo1.angle(i)
+        time.sleep(0.03)
     time.sleep(1)
     for i in range(15,-15,-1):
-            servo1.angle(i)
-            time.sleep(0.01)
+        servo1.angle(i)
+        time.sleep(0.03)
+    time.sleep(1)
     for i in range(-15,0,1):
-            servo1.angle(i)
-            time.sleep(0.01)
+        servo1.angle(i)
+        time.sleep(0.03)
+
+def wrong():
+    for i in range(0,45,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(45,-45,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(-45,45,1):
+        servo1.angle(i)
+        time.sleep(0.01)
+    for i in range(45,0,-1):
+        servo1.angle(i)
+        time.sleep(0.01)
 
 # Global variable to store the original stdout and the log file object
 global original_stdout, log_file
@@ -75,20 +104,7 @@ def check_all_scanned():
     """Check if all QR codes 1, 2, and 3 have been scanned."""
     return all(scanned_qrcodes.values())
 
-def qr_code_scanner():
-    """Thread function to continuously scan QR codes."""
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
 
-        # Take a screenshot every 2 seconds
-        if int(time.time()) % 2 == 0:
-            screenshot_filename = f'/home/Tina/Downloads/family-robot/test pic/{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg'
-            cv2.imwrite(screenshot_filename, frame)
-
-            # scan QR codes
-            routine_flow(frame)
             
 
 #light strip
