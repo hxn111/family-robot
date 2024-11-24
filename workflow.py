@@ -5,7 +5,6 @@ import time
 import threading
 from datetime import datetime
 import os
-import arms
 from robot_hat import Servo
 import subprocess
 import sys
