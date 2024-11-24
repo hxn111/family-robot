@@ -3,6 +3,6 @@
 ## main
 workflow.py --the overall workflow
 
-hat_arms.py --define servos movements
+hardware.py --all the hardware
 
 qrgenerate.py --transfer an audio into a qr code
