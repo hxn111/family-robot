@@ -2,13 +2,19 @@ import cv2
 from pyzbar.pyzbar import decode
 # import pygame
 import time
-import threading
 from datetime import datetime
 import os
 from robot_hat import Servo
 import subprocess
 import sys
-from rpi_ws281x import PixelStrip, Color
+from rpi_ws281x import PixelStrip
+from utils import encode_ndarr
+from config import (
+    SYS_AUDIO_DIR, LOG_DIR, VIDS_DIR, AUDIO_DIR,
+    redis_client, R_KEY_LAST_FRAME,
+    MIC_DEVICE,
+)
+
 
 LED_COUNT = 16        # number of leds
 LED_PIN = 10          # GPIO18,spi 10
@@ -26,6 +32,28 @@ strip.begin()
 servo1 = Servo("P0")
 servo1.angle(0)
 
+current_time = datetime.now().strftime('%Y%m%d%H%M')
+# Global variable to store the original stdout and the log file object
+global original_stdout, log_file
+# Save the original stdout so you can restore it later
+original_stdout = sys.stdout
+# Redirect stdout to a log file
+log_filename = f"{LOG_DIR}/log_{datetime.now().strftime('%Y%m%d%H%M%S')}.txt"
+log_file = open(log_filename, 'w')
+sys.stdout = log_file
+
+# Initialize pygame mixer
+# pygame.mixer.init()
+
+# Dictionary to track which QR codes have been scanned
+scanned_qrcodes = {
+    "qrcode_1": False, # teeth and face
+    "qrcode_2": False, # pajamas
+    "qrcode_3": False # story
+}
+# diary_questions = ["diary1.wav","diary2.wav","diary3.wav","diary4.wav","diary5.wav","diary6.wav"]
+
+
 def finish_arms():
     for i in range(0,12,1):
         servo1.angle(i)
@@ -39,6 +67,7 @@ def finish_arms():
     for i in range(15,0,-1):
         servo1.angle(i)
         time.sleep(0.01)
+
 
 def listen():
     for i in range(0,15,1):
@@ -67,30 +96,11 @@ def wrong():
         servo1.angle(i)
         time.sleep(0.01)
 
-# Global variable to store the original stdout and the log file object
-global original_stdout, log_file
-# Save the original stdout so you can restore it later
-original_stdout = sys.stdout
-# Redirect stdout to a log file
-log_filename = f"/home/Tina/Downloads/family-robot/logs/log_{datetime.now().strftime('%Y%m%d%H%M%S')}.txt"
-log_file = open(log_filename, 'w')
-sys.stdout = log_file
-
-# Initialize pygame mixer
-# pygame.mixer.init()
-
-# Dictionary to track which QR codes have been scanned
-scanned_qrcodes = {
-    "qrcode_1": False, # teeth and face
-    "qrcode_2": False, # pajamas
-    "qrcode_3": False # story
-}
-qrcode_5_count = 0
-diary_questions = ["diary1.wav","diary2.wav","diary3.wav","diary4.wav","diary5.wav","diary6.wav"]
 
 def play_sound(sound_file):
     """Play the loaded sound."""
-    os.system(f"sudo aplay /home/Tina/Downloads/family-robot/sound/{sound_file}")
+    os.system(f"sudo aplay {SYS_AUDIO_DIR}/{sound_file}")
+
 
 def scan_qr_code(frame):
     """Scan the frame for QR codes and return the data."""
@@ -98,6 +108,7 @@ def scan_qr_code(frame):
     for obj in decoded_objects:
         return obj.data.decode('utf-8')
     return None
+
 
 def check_all_scanned():
     """Check if all QR codes 1, 2, and 3 have been scanned."""
@@ -118,25 +129,19 @@ def lightup(strip,led_index, color):
     strip.setPixelColor(led_index,color)
     strip.show()
 
-
-# Initialize the camera
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-cap.set(cv2.CAP_PROP_FPS, 10)
-
-# Generate filename based on current timestamp
-current_time = datetime.now().strftime('%Y%m%d%H%M')
-video_filename = f'/home/Tina/Downloads/family-robot/test video/{current_time}.avi'
-audio_filename = f'/home/Tina/Downloads/family-robot/test audio/{current_time}.wav'
-
-# Define the codec and create VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
-out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
-
 def video_recorder():
-    """Thread function to continuously record video."""
-    global out
+    """subprocess to continuously record video."""
+    # Initialize the camera
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    cap.set(cv2.CAP_PROP_FPS, 10)
+
+    # Generate filename based on current timestamp
+    video_filename = f'{VIDS_DIR}/{current_time}.avi'
+    # Define the codec and create VideoWriter object
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
+    out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
     try:
         while True:
             ret, frame = cap.read()
@@ -146,9 +151,17 @@ def video_recorder():
             # Write the frame to the video file
             out.write(frame)
             # out.flush()  # immedeiate save
+            # every 1 secs, also write frame to redis
+            last_update = 0
+            # Take a screenshot every second
+            if time.time() - last_update > 1:
+                last_update = time.time()
+                # expires in 5 seconds
+                redis_client.setex(
+                    R_KEY_LAST_FRAME, 5, encode_ndarr(frame))
 
             # Display the resulting frame
-            cv2.imshow('frame', frame)
+            # cv2.imshow('frame', frame)
     
     except Exception as e:
         print(f"Error occurred: {e}")
@@ -162,10 +175,11 @@ def video_recorder():
 
 def audio_recorder():
     """Start continuous audio recording."""
+    audio_filename = f'{AUDIO_DIR}/{current_time}.wav'
     global audio_process
     audio_process = subprocess.Popen([
         'arecord',
-        '-D', 'plughw:2,0',  # Specify the device
+        '-D', MIC_DEVICE,  # Specify the device
         '-f', 'cd',  # CD quality
         '-r', '44100',  # Sample rate
         '-c', '1',  # Mono audio
@@ -173,7 +187,6 @@ def audio_recorder():
         '-q',  # Quiet mode
         audio_filename  # Output file name
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
      # Check for errors
     stderr = audio_process.communicate()[1]
     if stderr:

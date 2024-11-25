@@ -11,7 +11,6 @@ qrgenerate.py --transfer an audio into a qr code
 
 ## Setup
 
-
 Raspberry Pi OS --> SD card with Raspberry Pi Imager
 ```
 PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
@@ -46,7 +45,7 @@ sudo bash i2samp.sh
 # you will be prompted to reboot
 ```
 
-
+### Add these to config file
 ```
 # /boot/firmware/config.txt
 core_freq=500
@@ -58,11 +57,28 @@ core_freq_min=500
 - 3.3V, GND, MO
 
 
+### Installing Redis
+```
+# install redis
+sudo apt-get install lsb-release curl gpg
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+sudo apt-get update
+sudo apt-get install redis
 
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+
+### Installing robot code and dependencies
 ```
 git clone git@github.com:hxn111/family-robot.git
 source ./venv/bin/activate
-
 cd family-robot
-
+pip install -r requirements.txt
 ```
+
+## Configuration
+In `family-robot/config.py`, you'll need to modify some paths, and the MIC device code. 

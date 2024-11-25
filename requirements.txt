@@ -1,5 +1,6 @@
 opencv-python
 pyzbar
+redis
 
 # From robot-hat, which got installed to system python
 # https://github.com/sunfounder/robot-hat/blob/v2.0/setup.py#L180C1-L188C2

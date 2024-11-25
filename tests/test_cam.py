@@ -1,5 +1,8 @@
 import cv2
-from ..config import PICS_DIR
+import time
+import os
+from datetime import datetime
+from config import PICS_DIR
 
 # Initialize the camera
 cap = cv2.VideoCapture(0)
@@ -17,9 +20,9 @@ def qr_code_scanner():
             break
         # Take a screenshot every 2 seconds
         if time.time() - last_shot_taken > 2:
-        	last_shot_taken = time.time()
+            last_shot_taken = time.time()
             screenshot_filename = os.path.join(
-            	PICS_DIR, f'{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg')
+                PICS_DIR, f'{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg')
             cv2.imwrite(screenshot_filename, frame)
             time.sleep(1)
             # # scan QR codes

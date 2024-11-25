@@ -1,50 +1,47 @@
 import cv2
-from pyzbar.pyzbar import decode
-import pygame
 import time
 import threading
+from multiprocessing import Process
 from datetime import datetime
-import os
-from robot_hat import Servo
-import subprocess
 import sys
-from rpi_ws281x import PixelStrip, Color
+import os
+from rpi_ws281x import Color
 import hardware
-
-# Initialize the camera
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-cap.set(cv2.CAP_PROP_FPS, 10)
+from utils import decode_ndarr
+from config import (
+    PICS_DIR,
+    redis_client, R_KEY_LAST_FRAME,
+)
 
 # Generate filename based on current timestamp
 current_time = datetime.now().strftime('%Y%m%d%H%M')
-video_filename = f'/home/Tina/Downloads/family-robot/test video/{current_time}.avi'
-audio_filename = f'/home/Tina/Downloads/family-robot/test audio/{current_time}.wav'
 
-# Define the codec and create VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MP4 format
-out = cv2.VideoWriter(video_filename, fourcc, 10.0, (1280, 720))
+qrcode_5_count = 0
+
 
 def qr_code_scanner():
     """Thread function to continuously scan QR codes."""
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+        last_shot_taken = 0
+        # Take a screenshot every 3 seconds
+        if time.time() - last_shot_taken > 3:
+            last_shot_taken = time.time()
+            # read last frame from redis 
+            frame = redis_client.get(R_KEY_LAST_FRAME)
+            if frame:
+                frame = decode_ndarr(frame)
+                screenshot_filename = os.path.join(
+                    PICS_DIR, f'{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg')
+                # Don't necessarily need these
+                cv2.imwrite(screenshot_filename, frame)
+                # scan QR codes
+                routine_flow(frame)
+            time.sleep(0.5)
 
-        # Take a screenshot every 2 seconds
-        if int(time.time()) % 2 == 0:
-            screenshot_filename = f'/home/Tina/Downloads/family-robot/test pic/{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg'
-            cv2.imwrite(screenshot_filename, frame)
-
-            # scan QR codes
-            routine_flow(frame)
 
 def routine_flow(frame):
     """ reminder and diary routine """
     qr_data = hardware.scan_qr_code(frame)
-    global qrcode_5_count
     if qr_data:
         print(f"QR Code detected: {qr_data}")
         
@@ -127,14 +124,16 @@ def routine_flow(frame):
 
 
 try:
-    # Start the video recording thread
-    threading.Thread(target=hardware.video_recorder, daemon=True).start()
+    # Start the video recording subprocess
+    proc_video = Process(target=hardware.video_recorder, daemon=True)
+    proc_video.start()
+    # threading.Thread(target=hardware.video_recorder, daemon=True).start()
 
     # Start the continuous audio recording
     threading.Thread(target=hardware.audio_recorder, daemon=True).start()
 
     # Start the QR code scanning thread
-    hardware.qr_code_scanner()
+    qr_code_scanner()
 
 
 except KeyboardInterrupt:
@@ -144,11 +143,8 @@ finally:
     if 'audio_process' in globals():
         hardware.audio_process.terminate()
     # Ensure that video recording is finalized properly
-    if 'out' in globals():
-        out.release()
-    # Release the video capture and close any OpenCV windows
-    if 'cap' in globals():
-        cap.release()
+    proc_video.terminate()
+    
     # Restore the original stdout
     sys.stdout = hardware.original_stdout
     # Close the log file
