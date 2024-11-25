@@ -1,0 +1,13 @@
+opencv-python
+pyzbar
+
+# From robot-hat, which got installed to system python
+# https://github.com/sunfounder/robot-hat/blob/v2.0/setup.py#L180C1-L188C2
+# Might need to ditch the venv if this doesn't work well.
+pyaudio
+spidev
+pyserial
+pillow
+pygame>=2.1.2
+gpiozero
+smbus2

@@ -1,6 +1,6 @@
 import cv2
 from pyzbar.pyzbar import decode
-import pygame
+# import pygame
 import time
 import threading
 from datetime import datetime
@@ -77,7 +77,7 @@ log_file = open(log_filename, 'w')
 sys.stdout = log_file
 
 # Initialize pygame mixer
-pygame.mixer.init()
+# pygame.mixer.init()
 
 # Dictionary to track which QR codes have been scanned
 scanned_qrcodes = {
