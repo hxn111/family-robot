@@ -51,7 +51,9 @@ scanned_qrcodes = {
     "qrcode_2": False, # pajamas
     "qrcode_3": False # story
 }
-# diary_questions = ["diary1.wav","diary2.wav","diary3.wav","diary4.wav","diary5.wav","diary6.wav"]
+diary_questions = [
+    "diary1.WAV","diary2.WAV","diary3.WAV","diary4.WAV","diary5.WAV","diary6.WAV"
+]
 
 
 def finish_arms():
